@@ -1,0 +1,35 @@
+name: Replace Username
+
+on:
+  create:
+    # This event fires when a repository is created.
+
+jobs:
+  replace-username:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Check out the repository
+      uses: actions/checkout@v3
+
+    - name: Replace {username} with GitHub actor
+      run: |
+        # We do an in-place find and replace on the two target files:
+        sed -i "s/{username}/${{ github.actor }}/g" challenge-6.ipynb
+        sed -i "s/{username}/${{ github.actor }}/g" README.md
+
+    - name: Commit and push
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        
+        # Add only the two changed files, so as not to commit unintended changes:
+        git add challenge_notebook.ipynb README.md
+        
+        # If nothing changed, skip committing:
+        if [ -n "$(git status --porcelain)" ]; then
+          git commit -m "Replace {username} with ${{ github.actor }}"
+          git push
+        else
+          echo "No changes to commit."
+        fi
